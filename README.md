@@ -1,6 +1,6 @@
 # menace
 
-> Note: This is not an official Google product.
+> Note: This is not an officially supported Google product.
 
 A kotlin implementation of the MENACE Tic-Tac-Toe matchbox learning machine (Machine Educable Noughts and Crosses Engine), originally built with matchboxes in 1961 by Donald Michie.
 
