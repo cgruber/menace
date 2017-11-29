@@ -16,10 +16,12 @@
 package menace
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /** A representation of the tic-tac-toe board. */
 @Serializable
 data class Board(val state: Map<Cell, Player?>) {
+  @Transient
   val winner: Player? by lazy { winner() }
 
   private fun cell(x: Byte, y: Byte): String = state[Cell(x, y)]?.toString() ?: "E"

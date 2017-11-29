@@ -16,6 +16,7 @@
 package menace
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.util.ArrayDeque
 
 @Serializable
@@ -31,8 +32,10 @@ enum class Player {
   }
 }
 
-@Serializable
-class GameState (var current: Board = Board.newBoard(), var turn: Player = Player.X)
+class Game (val current: MenaceState, val human: Player) {
+  var turn: Player = Player.X
+  var board: Board = Board.newBoard()
+}
 
 @Serializable
 data class Move (val initial: Board, val next: Cell, val player: Player) {
@@ -43,14 +46,21 @@ data class Move (val initial: Board, val next: Cell, val player: Player) {
   }
 
   /** The resulting board state after this move, lazily computed */
+  @Transient
   val outcome : Board by lazy { Board(initial.state.plus(Pair(next, player))) }
 
   /** Is this move a winning move for the given player */
+  @Transient
   val winning : Boolean by lazy { outcome.winner == player }
 }
 
-class MenaceState(val matchboxes: MutableMap<Move, Int>)
+@Serializable
+class MenaceState(
+    val name: String,
+    val humanFirst: Set<Matchbox>,
+    val menaceFirst: Set<Matchbox>)
 
+@Serializable
 data class Matchbox(val board : Board) {
   val moves : MutableMap<Move, Int> = mutableMapOf()
 

@@ -17,21 +17,21 @@
 
 package menace
 
-fun main(args : Array<String>) : Unit {
-  val gameState = GameState()
+import kotlinx.serialization.json.JSON
+import menace.Player.O
+import menace.Player.X
 
-  val moves = availableMoves(Board.newBoard(), Player.X)
-  for (move in moves) {
-    move.outcome.render()
-  }
+fun main(args : Array<String>) : Unit {
+  print("Preparing MENACE engine initial state...")
+  val timestamp = System.currentTimeMillis()
+  val menace = MenaceState(
+      name = "MENACE",
+      humanFirst = initializeMatchboxes(X),
+      menaceFirst = initializeMatchboxes(O))
+  println("Done: ${System.currentTimeMillis() - timestamp} ms.")
+  println(JSON.Companion.stringify(menace))
+  val gameState = Game(menace, O)
+
 
   //render(gameState);
-}
-
-
-
-
-fun render(state: GameState): Unit {
-  println("Current player: ${state.turn}")
-  state.current.render()
 }
