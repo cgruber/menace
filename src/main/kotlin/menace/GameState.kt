@@ -15,106 +15,107 @@
  */
 package menace
 
-import menace.Player.Companion.E
+import kotlinx.serialization.Serializable
+import java.util.ArrayDeque
 
-data class Cell(val x: Int, val y: Int)
+@Serializable
+data class Cell(val x: Byte, val y: Byte) {
+  constructor(x: Int, y: Int) : this(x.toByte(), y.toByte())
+  override fun toString(): String = "($x,$y)"
+}
 
 enum class Player {
   X, O;
   companion object {
-    val E = null // empty game state element for easy text representation of game state.
+    val E = null // newBoard game state element for easy text representation of game state.
   }
 }
 
-typealias Board = Map<Cell, Player?>
+@Serializable
+class GameState (var current: Board = Board.newBoard(), var turn: Player = Player.X)
 
-class GameState (var current: Board = cleanBoard(), var turn: Player = Player.X)
-
+@Serializable
 data class Move (val initial: Board, val next: Cell, val player: Player) {
-  val outcome : Board by lazy { initial.plus(Pair(next, player)) }
-  val winning : Boolean by lazy { winner(outcome) == player }
-}
-
-fun board(
-    p0: Player?, p1: Player?, p2: Player?,
-    p3: Player?, p4: Player?, p5: Player?,
-    p6: Player?, p7: Player?, p8: Player?): Board {
-  return mapOf(
-      Pair(Cell(0, 0), p0),
-      Pair(Cell(1, 0), p1),
-      Pair(Cell(2, 0), p2),
-      Pair(Cell(0, 1), p3),
-      Pair(Cell(1, 1), p4),
-      Pair(Cell(2, 1), p5),
-      Pair(Cell(0, 2), p6),
-      Pair(Cell(1, 2), p7),
-      Pair(Cell(2, 2), p8))
-}
-
-/**
- * Checks the supplied board for a winner.  It assumes a board in play, and assumes it is
- * checking at the earliest possibly winning move, and so does not handle cases where the
- * board is set up incoherently or in an invalid state, with more than one winner, or improper
- * numbers of X's or O's.  If there are more than one winner in the game configuration, this
- * method will return the first found.
- */
-fun winner(board: Board) : Player? {
-  // Check for column wins
-  for (row in 0..2) {
-    val players = board.filterKeys({ it.x == row }).values
-    if (players.size == 3 && players.toSet().size == 1) return players.first()
+  init {
+    check(initial.state[next] == null) {
+      "Next move ($next.x, $next.y) is already taken."
+    }
   }
 
-  // Check for row wins
-  skip@ for (col in 0..2) {
-    val players = board.filterKeys({ it.y == col }).values
-    if (players.size == 3 && players.toSet().size == 1) return players.first()
-  }
+  /** The resulting board state after this move, lazily computed */
+  val outcome : Board by lazy { Board(initial.state.plus(Pair(next, player))) }
 
-  // Check diagonal wins
-  val left = arrayListOf(board[Cell(0,0)], board[Cell(1, 1)], board[Cell(2,2)])
-  if (left.size == 3 && left.toSet().size == 1) return left.first()
-
-  val right = arrayListOf(board[Cell(0,2)], board[Cell(1, 1)], board[Cell(2,0)])
-  if (right.size == 3 && right.toSet().size == 1) return right.first()
-
-  // No wins
-  return null
+  /** Is this move a winning move for the given player */
+  val winning : Boolean by lazy { outcome.winner == player }
 }
 
 class MenaceState(val matchboxes: MutableMap<Move, Int>)
 
+data class Matchbox(val board : Board) {
+  val moves : MutableMap<Move, Int> = mutableMapOf()
 
-class Matchbox(
-  val board : Board,
-  val moves : Map<Move, Int>
-)
+  override fun toString(): String {
+    val next = moves.mapKeys { it.key.next }
+    return "Matchbox(board=${board}, next=${next}"
+  }
+}
 
-fun initializeMatchboxes(): MutableMap<Move, Int> {
-  val matchboxes = mutableMapOf<Move, Int>()
-  val nextMoves = validNextMoves(cleanBoard(), Player.X)
-  for (move in nextMoves) {
-      matchboxes.put(move, 4)
+
+fun initializeMatchboxes(human: Player, initial: Board = Board.newBoard()): Set<Matchbox> {
+  // Human and Menace play opposite
+  val menace = when (human) {
+    Player.X -> Player.O
+    Player.O -> Player.X
+  }
+
+  val matchboxes: MutableSet<Matchbox> = mutableSetOf()
+  val boards: ArrayDeque<Board> = ArrayDeque()
+  boards.add(initial)
+
+  while (!boards.isEmpty()) {
+    val board = boards.poll()
+
+    val nextBoards = when {
+      menace == Player.X && board == Board.newBoard() -> setOf(board) // skip if menace goes first
+      else -> {
+        // Human turn
+        availableMoves(board, human)
+            .map { it.outcome }
+            .filter { it.winner == null } // ignore winning boards, since play can't continue
+      }
+    }
+
+    // Set up machine states for subsequent moves
+    nextBoards
+        .flatMap { availableMoves(it, menace) }
+        .groupBy { it.initial }
+        .forEach {
+          if (!it.value.isEmpty()) {
+            val matchbox = Matchbox(it.key)
+            if (!matchboxes.contains(matchbox)) {
+              matchboxes.add(matchbox)
+              it.value.forEach {
+                matchbox.moves.put(it, 4)
+                if (it.outcome.winner == null) boards.add(it.outcome)
+              }
+            }
+          }
+        }
   }
   return matchboxes
 }
 
-fun cleanBoard() : Board {
-  return board(
-      E, E, E,
-      E, E, E,
-      E, E, E)
-}
 
-fun validNextMoves(initial: Board, turn: Player) : Set<Move> {
+
+fun availableMoves(initial: Board, turn: Player) : Set<Move> {
     val moves = mutableSetOf<Move>()
 
     for (x in 0..2) {
-        for (y in 0..2) {
-            if (initial[Cell(x, y)] == null) {
-                moves.add(Move(initial, Cell(x, y), turn))
-            }
+      for (y in 0..2) {
+        if (initial.state[Cell(x, y)] == null) {
+            moves.add(Move(initial, Cell(x, y), turn))
         }
+      }
     }
     return moves
 }
