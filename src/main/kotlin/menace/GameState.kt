@@ -15,9 +15,16 @@
  */
 package menace
 
+import menace.Player.Companion.E
+
 data class Cell(val x: Int, val y: Int)
 
-enum class Player { X, O }
+enum class Player {
+  X, O;
+  companion object {
+    val E = null // empty game state element for easy text representation of game state.
+  }
+}
 
 typealias Board = Map<Cell, Player?>
 
@@ -29,20 +36,19 @@ data class Move (val initial: Board, val next: Cell, val player: Player) {
 }
 
 fun board(
-        p0: Player?, p1: Player?, p2: Player?,
-        p3: Player?, p4: Player?, p5: Player?,
-        p6: Player?, p7: Player?, p8: Player?): Board {
-    return mapOf(
-            Pair(Cell(0, 0), p0),
-            Pair(Cell(1, 0), p1),
-            Pair(Cell(2, 0), p2),
-            Pair(Cell(0, 1), p3),
-            Pair(Cell(1, 1), p4),
-            Pair(Cell(2, 1), p5),
-            Pair(Cell(0, 2), p6),
-            Pair(Cell(1, 2), p7),
-            Pair(Cell(2, 2), p8)
-    )
+    p0: Player?, p1: Player?, p2: Player?,
+    p3: Player?, p4: Player?, p5: Player?,
+    p6: Player?, p7: Player?, p8: Player?): Board {
+  return mapOf(
+      Pair(Cell(0, 0), p0),
+      Pair(Cell(1, 0), p1),
+      Pair(Cell(2, 0), p2),
+      Pair(Cell(0, 1), p3),
+      Pair(Cell(1, 1), p4),
+      Pair(Cell(2, 1), p5),
+      Pair(Cell(0, 2), p6),
+      Pair(Cell(1, 2), p7),
+      Pair(Cell(2, 2), p8))
 }
 
 /**
@@ -80,24 +86,24 @@ class MenaceState(val matchboxes: MutableMap<Move, Int>)
 
 
 class Matchbox(
-    val board : Board,
-    val moves : Map<Move, Int>
+  val board : Board,
+  val moves : Map<Move, Int>
 )
 
 fun initializeMatchboxes(): MutableMap<Move, Int> {
-    val matchboxes = mutableMapOf<Move, Int>()
-    val nextMoves = validNextMoves(cleanBoard(), Player.X)
-    for (move in nextMoves) {
-        matchboxes.put(move, 4)
-    }
-    return matchboxes
+  val matchboxes = mutableMapOf<Move, Int>()
+  val nextMoves = validNextMoves(cleanBoard(), Player.X)
+  for (move in nextMoves) {
+      matchboxes.put(move, 4)
+  }
+  return matchboxes
 }
 
 fun cleanBoard() : Board {
-    return board(
-        null, null, null,
-        null, null, null,
-        null, null, null)
+  return board(
+      E, E, E,
+      E, E, E,
+      E, E, E)
 }
 
 fun validNextMoves(initial: Board, turn: Player) : Set<Move> {

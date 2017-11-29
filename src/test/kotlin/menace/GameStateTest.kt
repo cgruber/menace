@@ -16,59 +16,56 @@
 package menace
 
 import com.google.common.truth.Truth.assertThat
+import menace.Player.Companion.E
 import menace.Player.O
 import menace.Player.X
 import org.junit.Test
 
 class GameStateTest() {
-    companion object {
-        val E = null;
-    }
-
-    @Test fun x_winner() {
-        val board =  board(
-            X, X, X,
-            O, O, X,
-            O, O, E
-        )
-        assertThat(winner(board)).isEqualTo(X)
-    }
-
-    @Test fun o_winner() {
-        val board =  board(
-            X, X, O,
-            O, O, X,
-            O, X, E
-        )
-        assertThat(winner(board)).isEqualTo(O)
-    }
-
-    @Test fun no_winner_start() {
-        val board =  board(
-            E, E, E,
-            E, E, E,
-            E, E, E
-        )
-        assertThat(winner(board)).isEqualTo(null)
-    }
-
-    @Test fun no_winner_yet() {
-        val board =  board(
-            X, X, E,
-            O, X, X,
-            E, O, O
-        )
-        assertThat(winner(board)).isEqualTo(null)
-    }
-
-    @Test fun no_winner_finished() {
-        val board =  board(
-            X, X, O,
-            O, X, X,
-            X, O, O
-        )
-        assertThat(winner(board)).isEqualTo(null)
-    }
 
 
+  @Test fun x_winner() {
+    val board =  board(
+        X, X, X,
+        O, O, X,
+        O, O, E
+    )
+    assertThat(winner(board)).isEqualTo(X)
+  }
+
+  @Test fun o_winner() {
+    val board =  board(
+        X, X, O,
+        O, O, X,
+        O, X, E
+    )
+    assertThat(winner(board)).isEqualTo(O)
+  }
+
+  @Test fun no_winner_start() {
+    val board =  board(
+        E, E, E,
+        E, E, E,
+        E, E, E
+    )
+    assertThat(winner(board)).isEqualTo(null)
+  }
+
+  @Test fun no_winner_yet() {
+    val board =  board(
+        X, X, E,
+        O, X, X,
+        E, O, O
+    )
+    assertThat(winner(board)).isEqualTo(null)
+  }
+
+  @Test fun no_winner_finished() {
+    val board =  board(
+        X, X, O,
+        O, X, X,
+        X, O, O
+    )
+    assertThat(winner(board)).isEqualTo(null)
+  }
 }
