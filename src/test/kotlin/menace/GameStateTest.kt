@@ -15,7 +15,6 @@
  */
 package menace
 
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import menace.Player.O
 import menace.Player.X
