@@ -28,31 +28,46 @@ class GameStateTest() {
 
     @Test fun x_winner() {
         val board =  board(
-                X, X, X,
-                O, O, X,
-                O, O, E
+            X, X, X,
+            O, O, X,
+            O, O, E
         )
-        print(render(board))
         assertThat(winner(board)).isEqualTo(X)
     }
 
     @Test fun o_winner() {
         val board =  board(
-                X, X, O,
-                O, O, X,
-                O, X, E
+            X, X, O,
+            O, O, X,
+            O, X, E
         )
-        print(render(board))
         assertThat(winner(board)).isEqualTo(O)
     }
 
-    @Test fun no_winner() {
+    @Test fun no_winner_start() {
         val board =  board(
-                X, X, O,
-                O, X, X,
-                X, O, O
+            E, E, E,
+            E, E, E,
+            E, E, E
         )
-        print(render(board))
+        assertThat(winner(board)).isEqualTo(null)
+    }
+
+    @Test fun no_winner_yet() {
+        val board =  board(
+            X, X, E,
+            O, X, X,
+            E, O, O
+        )
+        assertThat(winner(board)).isEqualTo(null)
+    }
+
+    @Test fun no_winner_finished() {
+        val board =  board(
+            X, X, O,
+            O, X, X,
+            X, O, O
+        )
         assertThat(winner(board)).isEqualTo(null)
     }
 

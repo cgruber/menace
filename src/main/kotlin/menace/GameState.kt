@@ -45,28 +45,35 @@ fun board(
     )
 }
 
+/**
+ * Checks the supplied board for a winner.  It assumes a board in play, and assumes it is
+ * checking at the earliest possibly winning move, and so does not handle cases where the
+ * board is set up incoherently or in an invalid state, with more than one winner, or improper
+ * numbers of X's or O's.  If there are more than one winner in the game configuration, this
+ * method will return the first found.
+ */
 fun winner(board: Board) : Player? {
-    return when (board[Cell(0,0)]) {
-        Player.X -> {
-            
-        }
-        Player.O -> null
-        null -> {
-            when (board[Cell(1, 1)]) {
-                Player.X -> null
-                Player.O -> null
-                null -> {
-                    when(board[Cell(2, 2)]) {
-                        Player.X -> null
-                        Player.O -> null
-                        null -> {
-                            return null
-                        }
-                    }
-                }
-            }
-        }
-    }
+  // Check for column wins
+  for (row in 0..2) {
+    val players = board.filterKeys({ it.x == row }).values
+    if (players.size == 3 && players.toSet().size == 1) return players.first()
+  }
+
+  // Check for row wins
+  skip@ for (col in 0..2) {
+    val players = board.filterKeys({ it.y == col }).values
+    if (players.size == 3 && players.toSet().size == 1) return players.first()
+  }
+
+  // Check diagonal wins
+  val left = arrayListOf(board[Cell(0,0)], board[Cell(1, 1)], board[Cell(2,2)])
+  if (left.size == 3 && left.toSet().size == 1) return left.first()
+
+  val right = arrayListOf(board[Cell(0,2)], board[Cell(1, 1)], board[Cell(2,0)])
+  if (right.size == 3 && right.toSet().size == 1) return right.first()
+
+  // No wins
+  return null
 }
 
 class MenaceState(val matchboxes: MutableMap<Move, Int>)
