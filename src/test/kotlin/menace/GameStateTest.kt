@@ -16,6 +16,9 @@
 package menace
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.serialization.json.JSON
+import menace.Board.Companion.forPositions
+import menace.Player.Companion.E
 import menace.Player.O
 import menace.Player.X
 import org.junit.Test
@@ -32,5 +35,79 @@ class GameStateTest() {
     val matchboxes = initializeMatchboxes(human = O)
     assertThat(matchboxes.filter { it.board.winner != null }).isEmpty()
     assertThat(matchboxes).hasSize(2427)
+  }
+
+
+  val json = JSON(unquoted = true, indented = true, indent = "  ")
+  val jsonText =
+"""{
+  name: "MENACE 2",
+  humanFirst: [
+    {
+      board: {
+        state: [
+          O,
+          X,
+          X,
+          null,
+          X,
+          O,
+          null,
+          O,
+          null
+        ]
+      },
+      beads: [
+        {
+          move: {
+            next: 3,
+            player: X
+          }
+        },
+        {
+          move: {
+            next: 3,
+            player: X
+          }
+        },
+        {
+          move: {
+            next: 3,
+            player: X
+          }
+        },
+        {
+          move: {
+            next: 3,
+            player: X
+          }
+        }
+      ]
+    }
+  ],
+  menaceFirst: [
+  ]
+}"""
+  val board = forPositions(
+      O, X, X,
+      E, X, O,
+      E, O, E)
+  val menace = MenaceState(
+      name = "MENACE 2",
+      humanFirst = setOf(Matchbox(board).also {
+        for (i in 0..3) {
+          it.beads.add(Bead(Move(3, X)))
+        }
+      }),
+      menaceFirst = setOf())
+
+  @Test fun writeOut() {
+    val outputString = json.stringify(menace)
+    assertThat(outputString).isEqualTo(jsonText);
+  }
+
+  @Test fun readIn() {
+    val parsed: MenaceState = json.parse(jsonText)
+    assertThat(parsed).isEqualTo(menace)
   }
 }
