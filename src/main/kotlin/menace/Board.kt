@@ -20,18 +20,33 @@ import kotlinx.serialization.Transient
 
 /** A representation of the tic-tac-toe board. */
 @Serializable
-data class Board(val state: Map<Cell, Player?>) {
+data class Board private constructor (private val state: List<Player?>) {
+
+  init {
+    check(state.size == 9) { "A tic-tac-toe board must have 9 places" }
+  }
+
+  operator fun get(index: Int): Player? = state[index]
+
+  fun move(position: Int, player: Player?): Board {
+    check(position in 0..8) { "position (${position}) must be between 0 and 8"}
+    check(state[position] == null) {
+      "position (${position}) was already played by ${state[position]}"
+    }
+    return Board(state.toMutableList().apply { this[position] = player })
+  }
+
+  fun move(move: Move): Board = move(move.next, move.player)
+
   @Transient
   val winner: Player? by lazy { winner() }
-
-  private fun cell(x: Byte, y: Byte): String = state[Cell(x, y)]?.toString() ?: "E"
 
   override fun toString(): String {
     return """
       +-+-+-+
-      |${cell(0, 0)}|${cell(1, 0)}|${cell(2, 0)}|
-      |${cell(0, 1)}|${cell(1, 1)}|${cell(2, 1)}|
-      |${cell(0, 2)}|${cell(1, 2)}|${cell(2, 2)}|
+      |${state[0] ?: "E"}|${state[1] ?: "E"}|${state[2] ?: "E"}|
+      |${state[3] ?: "E"}|${state[4] ?: "E"}|${state[5] ?: "E"}|
+      |${state[6] ?: "E"}|${state[7] ?: "E"}|${state[8] ?: "E"}|
       +-+-+-+
     """
   }
@@ -45,22 +60,23 @@ data class Board(val state: Map<Cell, Player?>) {
    */
   private fun winner() : Player? {
     // Check for column wins
-    for (row in 0..2) {
-      val players = state.filterKeys({ it.x == row.toByte() }).values
+    for (col in 0..2) {
+      val players = state.slice(setOf(col, col+3, col+6))
       if (players.size == 3 && players.toSet().size == 1) return players.first()
     }
 
     // Check for row wins
-    skip@ for (col in 0..2) {
-      val players = state.filterKeys({ it.y == col.toByte() }).values
+    for (row in 0..2) {
+      val start = row * 3
+      val players = state.slice(IntRange(start, start+2))
       if (players.size == 3 && players.toSet().size == 1) return players.first()
     }
 
     // Check diagonal wins
-    val left = arrayListOf(state[Cell(0,0)], state[Cell(1, 1)], state[Cell(2,2)])
+    val left = state.slice(arrayListOf(0, 4, 8))
     if (left.size == 3 && left.toSet().size == 1) return left.first()
 
-    val right = arrayListOf(state[Cell(0,2)], state[Cell(1, 1)], state[Cell(2,0)])
+    val right = arrayListOf(state[2], state[4], state[6])
     if (right.size == 3 && right.toSet().size == 1) return right.first()
 
     // No wins
@@ -74,17 +90,12 @@ data class Board(val state: Map<Cell, Player?>) {
         p0: Player?, p1: Player?, p2: Player?,
         p3: Player?, p4: Player?, p5: Player?,
         p6: Player?, p7: Player?, p8: Player?): Board {
-      return Board(mapOf(
-          Pair(Cell(0, 0), p0),
-          Pair(Cell(1, 0), p1),
-          Pair(Cell(2, 0), p2),
-          Pair(Cell(0, 1), p3),
-          Pair(Cell(1, 1), p4),
-          Pair(Cell(2, 1), p5),
-          Pair(Cell(0, 2), p6),
-          Pair(Cell(1, 2), p7),
-          Pair(Cell(2, 2), p8)))
+      return Board(arrayListOf(
+          p0, p1, p2,
+          p3, p4, p5,
+          p6, p7, p8))
     }
+
     fun newBoard() : Board {
       return Board.forPositions(
           Player.E, Player.E, Player.E,

@@ -18,20 +18,26 @@
 package menace
 
 import kotlinx.serialization.json.JSON
+import menace.Player.Companion.E
 import menace.Player.O
 import menace.Player.X
 
 fun main(args : Array<String>) : Unit {
+  val json = JSON(unquoted = true, indented = true, indent = "  ")
   print("Preparing MENACE engine initial state...")
   val timestamp = System.currentTimeMillis()
   val menace = MenaceState(
-      name = "MENACE",
+      name = "MENACE 2",
       humanFirst = initializeMatchboxes(X),
       menaceFirst = initializeMatchboxes(O))
   println("Done: ${System.currentTimeMillis() - timestamp} ms.")
-  println(JSON.Companion.stringify(menace))
+  println(json.stringify(menace))
+
+
+
   val gameState = Game(menace, O)
 
 
   //render(gameState);
 }
+
