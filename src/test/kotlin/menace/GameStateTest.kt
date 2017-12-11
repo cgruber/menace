@@ -57,7 +57,7 @@ class GameStateTest() {
           null
         ]
       },
-      beads: [
+      moves: [
         {
           move: {
             next: 3,
@@ -96,7 +96,7 @@ class GameStateTest() {
       name = "MENACE 2",
       humanFirst = setOf(Matchbox(board).also {
         for (i in 0..3) {
-          it.beads.add(Bead(Move(3, X)))
+          it.moves.add(Bead(Move(3, X)))
         }
       }),
       menaceFirst = setOf())
