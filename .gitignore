@@ -26,3 +26,5 @@ target/
 *.iml
 .project/
 
+# Ignore local app files.
+*.menace
