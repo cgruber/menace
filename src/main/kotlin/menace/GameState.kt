@@ -15,13 +15,20 @@
  */
 package menace
 
+import com.google.common.collect.ImmutableMultiset
+import com.google.common.collect.Multiset
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import menace.Player.O
+import menace.Player.X
 import java.util.ArrayDeque
 
 typealias Cell = Int
 
 @Serializable
-data class Bead(val move: Move)
+data class Bead(val move: Move) {
+  override fun toString(): String = "${move}"
+}
 
 enum class Player {
   X, O;
@@ -31,12 +38,14 @@ enum class Player {
 }
 
 class Game (val current: MenaceState, val human: Player) {
-  var turn: Player = Player.X
+  var turn: Player = X
   var board: Board = Board.newBoard()
 }
 
 @Serializable
-data class Move (val next: Cell, val player: Player)
+data class Move (val next: Cell, val player: Player) {
+  override fun toString(): String = "(${player}->${next})"
+}
 
 @Serializable
 data class MenaceState(
@@ -47,15 +56,20 @@ data class MenaceState(
 @Serializable
 data class Matchbox(val board : Board) {
   // property to exclude from data class calculation of equals/hashcode
-  val beads: MutableList<Bead> = mutableListOf()
+  // would just use a multiset but kx.ser isn't ready for guava or kotlin.immutable types yet
+  val moves: MutableList<Bead> = mutableListOf()
+
+  @Transient
+  /** A multiset view of the moves **/
+  val beads: Multiset<Bead>
+    get() = ImmutableMultiset.copyOf(moves)
+
+  override fun toString(): String = "${board} beads: ${beads}\n"
 }
 
 fun initializeMatchboxes(human: Player, initial: Board = Board.newBoard()): Set<Matchbox> {
   // Human and Menace play opposite
-  val menace = when (human) {
-    Player.X -> Player.O
-    Player.O -> Player.X
-  }
+  val menace = when (human) { X -> O ; O -> X }
 
   val matchboxes: MutableSet<Matchbox> = mutableSetOf()
   val boards: ArrayDeque<Board> = ArrayDeque()
@@ -65,7 +79,7 @@ fun initializeMatchboxes(human: Player, initial: Board = Board.newBoard()): Set<
     val board = boards.poll()
 
     val nextBoards = when {
-      menace == Player.X && board == Board.newBoard() -> setOf(board) // skip if menace goes first
+      menace == X && board == Board.newBoard() -> setOf(board) // skip if menace goes first
       else -> {
         // Human turn
         availableMoves(board, human)
@@ -85,7 +99,7 @@ fun initializeMatchboxes(human: Player, initial: Board = Board.newBoard()): Set<
               matchboxes.add(matchbox)
               it.value.forEach {
                 for (count in 0..3) {
-                  matchbox.beads.add(Bead(it.second))
+                  matchbox.moves.add(Bead(it.second))
                 }
                 val outcome = matchbox.board.move(it.second)
                 if (outcome.winner == null) boards.add(outcome)
@@ -96,8 +110,6 @@ fun initializeMatchboxes(human: Player, initial: Board = Board.newBoard()): Set<
   }
   return matchboxes
 }
-
-
 
 fun availableMoves(initial: Board, turn: Player) : Set<Pair<Board,Move>> {
     val moves: MutableSet<Pair<Board, Move>> = mutableSetOf()
